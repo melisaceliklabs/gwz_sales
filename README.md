@@ -17,3 +17,44 @@ Bu aşamada yaptıklarım:
 Not: Proje yönergesi GitHub Desktop kullanımını öneriyor. Linux
 kullandığım için GitHub Desktop'ın resmi bir sürümü yok; aynı işlemleri
 Git CLI ve VS Code'un Source Control paneli ile yaptım.
+
+## Veri Kaynağı
+
+Veriler BigQuery'de barındırılıyor, repoda veri dosyası bulunmuyor.
+
+**Tablo:** `data-analytics-469406.course14.gwz_sales`
+(Workintech eğitim ortamında sağlanmıştır; konsol erişimi yetki gerektirir.)
+
+**Boyut:** 1.486.388 satır
+**Dönem:** 2021-03-01 – 2021-08-31 (184 gün)
+
+Tarih aralığındaki tüm günlerin veride mevcut olduğunu `GENERATE_DATE_ARRAY`
+ile ürettiğim takvimle karşılaştırarak doğruladım; eksik gün bulunmuyor.
+Veri seti tam bir yılı kapsamadığı için mevsimsellik veya yıllık trend
+yorumu yapılamaz.
+
+Bu proje Workintech Veri Analitiği eğitimi kapsamında hazırlanmıştır.
+Veri seti eğitim ortamında sağlanmış olup repoda paylaşılmamaktadır.
+
+### Kolonlar
+
+| Kolon | Tip | Açıklama |
+|---|---|---|
+| `date_date` | DATE | Sipariş tarihi (saat bilgisi içermez) |
+| `orders_id` | INTEGER | Sipariş numarası |
+| `products_id` | INTEGER | Ürün numarası |
+| `customers_id` | INTEGER | Müşteri numarası |
+| `category_1`, `category_2`, `category_3` | STRING | Ürün kategorisi (3 seviye) |
+| `code` | STRING | Ürün kodu |
+| `promo_name` | STRING | Uygulanan promosyonun adı |
+| `turnover_before_promo` | FLOAT | Promosyon öncesi tutar (brüt) |
+| `turnover` | FLOAT | Promosyon sonrası tutar (net) |
+| `purchase_cost` | FLOAT | Ürünün alış maliyeti |
+| `qty` | INTEGER | Adet |
+
+### Tablo yapısı hakkında not
+
+Bir satır bir siparişi değil, **sipariş içindeki bir ürün satırını** temsil ediyor.
+Toplam 1.486.388 satıra karşılık 178.974 farklı `orders_id` var; yani sipariş
+başına ortalama ~8,3 ürün satırı düşüyor. Sipariş bazlı bir analiz yapılacaksa
+önce `orders_id` üzerinden gruplama gerekir.
