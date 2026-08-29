@@ -9,16 +9,7 @@ geliştirip BigQuery'de test ediyorum.
 BigQuery içinde sorgunun farklı sürümlerini kaydetmek yerine, SQL
 dosyalarındaki değişiklikleri Git ile takip ediyorum.
 
-Bu aşamada yaptıklarım:
-
-- Yerel bir Git repository oluşturup yapılandırdım
-- Repository'yi VS Code'da açıp `gwz_sales.sql` dosyasını oluşturdum
-- Günlük ciro sorgusunu yazdım, BigQuery'de test ettim ve commit'ledim
-
-Bu proje Workintech Veri Analitiği eğitimi kapsamında hazırlanmıştır. Proje
-yönergesi GitHub Desktop kullanımını öneriyor; Linux kullandığım için GitHub
-Desktop'ın resmi bir sürümü yok, aynı işlemleri Git CLI ve VS Code'un Source
-Control paneli ile yaptım.
+Bu proje Workintech Veri Analitiği eğitimi kapsamında hazırlanmıştır.
 
 ## Veri Kaynağı
 
@@ -64,6 +55,11 @@ yapılacaksa önce `orders_id` üzerinden gruplama gerekir.
 - **Günlük ciro nasıl değişiyor?**
   `date_date` bazında `turnover` toplanarak günlük net ciro serisi çıkarıldı.
 
+- **Günlük satın alma maliyeti ne kadar?**
+  Satış müdürünün talebi üzerine `purchase_cost` toplamı da sorguya eklendi.
+  Ciro ile maliyet yan yana durduğu için günlük brüt kâr farkından
+  hesaplanabilir.
+
 ## Bulgular
 
 - Ciro hesabında `turnover` (promosyon sonrası net tutar) kullanıldı.
@@ -79,4 +75,18 @@ yapılacaksa önce `orders_id` üzerinden gruplama gerekir.
 
 | Dosya | İçerik |
 |---|---|
-| `gwz_sales.sql` | Günlük ciro sorgusu (`date_date` bazında `turnover` toplamı) |
+| `gwz_sales.sql` | Günlük ciro ve satın alma maliyeti (`date_date` bazında, en yeni tarih önce) |
+
+## Çalışma Yöntemi
+
+Değişiklikler doğrudan `main` üzerinde değil, feature dalları açılarak yapıldı:
+
+- `main` — çalışır durumdaki sürüm
+- `develop` — değişikliklerin biriktiği hazırlık dalı
+- Feature dalları (`add_purchase_cost`, `sort_dates`) — tek bir değişiklik içerir
+
+Akış: feature dalı aç → düzenle → commit → push → pull request → merge.
+Merge sonrası feature dalları hem yerelde hem uzakta silindi.
+
+Proje yönergesi GitHub Desktop kullanımını öneriyor; Linux kullandığım için
+tüm Git işlemlerini Git CLI ve VS Code'un Source Control paneli ile yaptım.
