@@ -1,92 +1,94 @@
 # gwz_sales
 
-## Proje Hakkında
+## About the Project
 
-GreenWeez satış ekibi için bir gösterge paneli hazırlama senaryosu kapsamında,
-`gwz_sales` tablosu üzerinde SQL sorguları yazıyorum. Sorguları VS Code'da
-geliştirip BigQuery'de test ediyorum.
+As part of a scenario where I build a dashboard for the GreenWeez sales team, I
+write SQL queries against the `gwz_sales` table. I develop the queries in
+VS Code and test them in BigQuery.
 
-BigQuery içinde sorgunun farklı sürümlerini kaydetmek yerine, SQL
-dosyalarındaki değişiklikleri Git ile takip ediyorum.
+Instead of saving different versions of a query inside BigQuery, I track the
+changes to the SQL files with Git.
 
-Bu proje Workintech Veri Analitiği eğitimi kapsamında hazırlanmıştır.
+This project was built as part of the Workintech Data Analytics program.
 
-## Veri Kaynağı
+## Data Source
 
-Veriler BigQuery'de barındırılıyor, repoda veri dosyası bulunmuyor.
+The data is hosted in BigQuery; there is no data file in the repo.
 
-**Tablo:** `data-analytics-469406.course14.gwz_sales`
-(Workintech eğitim ortamında sağlanmıştır; konsol erişimi yetki gerektirir.)
+**Table:** `data-analytics-469406.course14.gwz_sales`
+(Provided in the Workintech training environment; console access requires
+permissions.)
 
-**Boyut:** 1.486.388 satır
+**Size:** 1,486,388 rows
 
-**Dönem:** 2021-03-01 – 2021-08-31 (184 gün)
+**Period:** 2021-03-01 – 2021-08-31 (184 days)
 
-Tarih aralığındaki tüm günlerin veride mevcut olduğunu `GENERATE_DATE_ARRAY`
-ile ürettiğim takvimle karşılaştırarak doğruladım; eksik gün bulunmuyor. Veri
-seti tam bir yılı kapsamadığı için mevsimsellik veya yıllık trend yorumu
-yapılamaz.
+I verified that every day in the date range is present in the data by comparing
+it against a calendar I generated with `GENERATE_DATE_ARRAY`; there are no
+missing days. Since the dataset does not cover a full year, no conclusions can
+be drawn about seasonality or yearly trends.
 
-### Kolonlar
+### Columns
 
-| Kolon | Tip | Açıklama |
+| Column | Type | Description |
 |---|---|---|
-| `date_date` | DATE | Sipariş tarihi (saat bilgisi içermez) |
-| `orders_id` | INTEGER | Sipariş numarası |
-| `products_id` | INTEGER | Ürün numarası |
-| `customers_id` | INTEGER | Müşteri numarası |
-| `category_1`, `category_2`, `category_3` | STRING | Ürün kategorisi (3 seviye) |
-| `code` | STRING | Ürün kodu |
-| `promo_name` | STRING | Uygulanan promosyonun adı |
-| `turnover_before_promo` | FLOAT | Promosyon öncesi tutar (brüt) |
-| `turnover` | FLOAT | Promosyon sonrası tutar (net) |
-| `purchase_cost` | FLOAT | Ürünün alış maliyeti |
-| `qty` | INTEGER | Adet |
+| `date_date` | DATE | Order date (no time component) |
+| `orders_id` | INTEGER | Order number |
+| `products_id` | INTEGER | Product number |
+| `customers_id` | INTEGER | Customer number |
+| `category_1`, `category_2`, `category_3` | STRING | Product category (3 levels) |
+| `code` | STRING | Product code |
+| `promo_name` | STRING | Name of the promotion applied |
+| `turnover_before_promo` | FLOAT | Amount before promotion (gross) |
+| `turnover` | FLOAT | Amount after promotion (net) |
+| `purchase_cost` | FLOAT | Purchase cost of the product |
+| `qty` | INTEGER | Quantity |
 
-### Tablo yapısı hakkında not
+### A note on the table structure
 
-Bir satır bir siparişi değil, **sipariş içindeki bir ürün satırını** temsil
-ediyor. Toplam 1.486.388 satıra karşılık 178.974 farklı `orders_id` var; yani
-sipariş başına ortalama ~8,3 ürün satırı düşüyor. Sipariş bazlı bir analiz
-yapılacaksa önce `orders_id` üzerinden gruplama gerekir.
+A row does not represent an order, but **a product line within an order**.
+Against a total of 1,486,388 rows there are 178,974 distinct `orders_id`
+values, which works out to roughly 8.3 product lines per order. Any
+order-level analysis needs to group by `orders_id` first.
 
-## Analiz Soruları
+## Analysis Questions
 
-- **Günlük ciro nasıl değişiyor?**
-  `date_date` bazında `turnover` toplanarak günlük net ciro serisi çıkarıldı.
+- **How does daily turnover change?**
+  A daily net turnover series was produced by summing `turnover` by
+  `date_date`.
 
-- **Günlük satın alma maliyeti ne kadar?**
-  Satış müdürünün talebi üzerine `purchase_cost` toplamı da sorguya eklendi.
-  Ciro ile maliyet yan yana durduğu için günlük brüt kâr farkından
-  hesaplanabilir.
+- **What is the daily purchase cost?**
+  At the sales manager's request, the sum of `purchase_cost` was added to the
+  query as well. Since turnover and cost sit side by side, daily gross profit
+  can be calculated from the difference.
 
-## Bulgular
+## Findings
 
-- Ciro hesabında `turnover` (promosyon sonrası net tutar) kullanıldı.
-  `turnover_before_promo` brüt tutarı verdiği için kasaya giren parayı
-  yansıtmıyor. İkisinin farkı promosyonların maliyetini gösteriyor — ayrı bir
-  analiz konusu.
+- `turnover` (the net amount after promotions) was used for the turnover
+  calculation. `turnover_before_promo` gives the gross amount, so it does not
+  reflect the money that actually comes in. The difference between the two
+  shows the cost of the promotions — a separate topic for analysis.
 
-- `turnover` FLOAT tipinde olduğu için 1,4 milyon satırlık toplamda kayan
-  nokta hataları birikiyor (ör. `90202.789999999528`). `ROUND` toplamdan
-  **sonra** uygulandı; satır bazında yuvarlamak hatayı büyütürdü.
+- Because `turnover` is a FLOAT, floating point errors accumulate across a sum
+  of 1.4 million rows (e.g. `90202.789999999528`). `ROUND` was applied **after**
+  the sum; rounding row by row would have made the error larger.
 
-## Dosyalar
+## Files
 
-| Dosya | İçerik |
+| File | Contents |
 |---|---|
-| `gwz_sales.sql` | Günlük ciro ve satın alma maliyeti (`date_date` bazında, en yeni tarih önce) |
+| `gwz_sales.sql` | Daily turnover and purchase cost (by `date_date`, newest date first) |
 
-## Çalışma Yöntemi
+## Way of Working
 
-Değişiklikler doğrudan `main` üzerinde değil, feature dalları açılarak yapıldı:
+Changes were not made directly on `main`; feature branches were opened instead:
 
-- `main` — çalışır durumdaki sürüm
-- `develop` — değişikliklerin biriktiği hazırlık dalı
-- Feature dalları (`add_purchase_cost`, `sort_dates`) — tek bir değişiklik içerir
+- `main` — the working version
+- `develop` — the staging branch where changes accumulate
+- Feature branches (`add_purchase_cost`, `sort_dates`) — one change each
 
-Akış: feature dalı aç → düzenle → commit → push → pull request → merge.
-Merge sonrası feature dalları hem yerelde hem uzakta silindi.
+Flow: open a feature branch → edit → commit → push → pull request → merge.
+After merging, the feature branches were deleted both locally and remotely.
 
-Proje yönergesi GitHub Desktop kullanımını öneriyor; Linux kullandığım için
-tüm Git işlemlerini Git CLI ve VS Code'un Source Control paneli ile yaptım.
+The project instructions suggest using GitHub Desktop; since I work on Linux, I
+did all Git operations with the Git CLI and VS Code's Source Control panel.
